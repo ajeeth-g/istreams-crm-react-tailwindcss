@@ -5,9 +5,9 @@ import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
 import { Eye, Trash2, UserPlus, X } from "lucide-react";
 import toast from "react-hot-toast";
 
-const AddCustomer = ({ existingData, fetchAllCustomers }) => {
+const AddCustomer = ({ existingData = {}, fetchAllCustomers }) => {
   const location = useLocation();
-  const { customer } = location.state || {}; // Get customer data
+  const { customer = {} } = location.state || {}; // Get customer data
   
 
   const natureOfBusinesss = [
@@ -36,16 +36,12 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
     DELIVERY_ADDRESS: "",
     CLIENT_CONTACTS: [],
   });
-
-  useEffect(() => {
-    if (existingData) {
-      setNewCustomer(existingData);
-    } else if (customer) {
-      setNewCustomer(customer);
-    }
-  }, [existingData, customer]);
-
   
+  useEffect(() => {
+    if (existingData && JSON.stringify(existingData) !== JSON.stringify(newCustomer)) {
+      setNewCustomer(existingData);
+    }
+  }, [existingData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -97,7 +93,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
   const saveContact = () => {
     if (editIndex !== null) {
       // Update existing contact
-      const updatedContacts = [...newCustomer.CLIENT_CONTACTS];
+      const updatedContacts = [...newCustomer.CLIENT_CONTACTS || []];
       updatedContacts[editIndex] = newContact;
       setNewCustomer((prevData) => ({
         ...prevData,
@@ -108,7 +104,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
       // Add new contact
       setNewCustomer((prevData) => ({
         ...prevData,
-        CLIENT_CONTACTS: [...prevData.CLIENT_CONTACTS, newContact],
+       CLIENT_CONTACTS: [...(prevData.CLIENT_CONTACTS || []), newContact],
       }));
       toast.success("Contact added successfully!");
     }
@@ -124,15 +120,68 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log("NewCustomer:", { ...newCustomer });
-
+    e.preventDefault(); // Prevents the page from refreshing
+  
     try {
-      
-      await fetchAllCustomers();
+      // Clone the newCustomer object excluding non-serializable properties
+      const cleanCustomer = {
+        CLIENT_ID: newCustomer.CLIENT_ID || "",
+        CLIENT_NAME: newCustomer.CLIENT_NAME || "",
+        EMAIL_ADDRESS: newCustomer.EMAIL_ADDRESS || "",
+        NATURE_OF_BUSINESS: newCustomer.NATURE_OF_BUSINESS || "",
+        TRN_VAT_NO: newCustomer.TRN_VAT_NO || "",
+        COUNTRY: newCustomer.COUNTRY || "",
+        TELEPHONE_NO: newCustomer.TELEPHONE_NO || "",
+        CITY_NAME: newCustomer.CITY_NAME || "",
+        GROUP_NAME: newCustomer.GROUP_NAME || "",
+        WEB_ADDRESS: newCustomer.WEB_ADDRESS || "",
+        COMMUNICATION_ADDRESS: newCustomer.COMMUNICATION_ADDRESS || "",
+        INVOICE_ADDRESS: newCustomer.INVOICE_ADDRESS || "",
+        DELIVERY_ADDRESS: newCustomer.DELIVERY_ADDRESS || "",
+        CLIENT_CONTACTS: (newCustomer.CLIENT_CONTACTS || []).map(contact => ({
+          CLIENT_ID: contact.CLIENT_ID || "",
+          SERIAL_NO: contact.SERIAL_NO || "",
+          NAME: contact.NAME || "",
+          DESIGNATION: contact.DESIGNATION || "",
+          EMAIL_ADDRESS: contact.EMAIL_ADDRESS || "",
+          MOBILE_NO: contact.MOBILE_NO || "",
+          TELEPHONE_NO: contact.TELEPHONE_NO || "",
+          ADDRESS: contact.ADDRESS || "",
+          CONTACT_FOR: contact.CONTACT_FOR || "",
+          ALTERNATIVE_CONTACT: contact.ALTERNATIVE_CONTACT || "",
+        }))
+      };
+  
+      console.log("NewCustomer (Before Saving):", JSON.parse(JSON.stringify(cleanCustomer)));  
+  
+      // Fetch existing customers from local storage
+      const existingCustomers = JSON.parse(localStorage.getItem("customers")) || [];
+  
+      // Check if the customer already exists
+      const customerIndex = existingCustomers.findIndex(c => c.CLIENT_ID === cleanCustomer.CLIENT_ID);
+  
+      if (customerIndex > -1) {
+        // Update the existing customer
+        existingCustomers[customerIndex] = cleanCustomer;
+      } else {
+        // Add new customer to the list
+        existingCustomers.push(cleanCustomer);
+      }
+  
+      // Save updated customers list to local storage
+      localStorage.setItem("customers", JSON.stringify(existingCustomers));
+  
+      // Refresh customers list
+      if (typeof fetchAllCustomers === "function") {
+        fetchAllCustomers();
+      }
+  
+      // Show success notification
       toast.success("Customer saved successfully!");
+  
+      // Reset the form state
       setNewCustomer({
-        CLIENT_ID:"",
+        CLIENT_ID: "",
         CLIENT_NAME: "",
         EMAIL_ADDRESS: "",
         NATURE_OF_BUSINESS: "",
@@ -140,18 +189,20 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
         COUNTRY: "",
         TELEPHONE_NO: "",
         CITY_NAME: "",
+        GROUP_NAME: "",
         WEB_ADDRESS: "",
-        GROUP_NAME:"",
-        COMMUNICATION_ADDRESS:"",
+        COMMUNICATION_ADDRESS: "",
         INVOICE_ADDRESS: "",
         DELIVERY_ADDRESS: "",
-        CLIENT_CONTACTS: [], // Empty contacts array
+        CLIENT_CONTACTS: [],
       });
+  
     } catch (error) {
       console.error("Error saving customer:", error);
-      //toast.error(`Error saving customer: ${error.message}`);
+      toast.error("Error saving customer");
     }
   };
+  
   return (
     <div className="flex gap-5 h-full w-full">
       <div className="flex flex-col md:flex-row gap-4 p-4">
@@ -183,7 +234,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
                   placeholder="Enter company name"
                   className="w-full mt-1 p-2 border rounded-md text-black bg-gray-300"
                   required
-                  value={newCustomer.CLIENT_NAME}
+                  value={newCustomer.CLIENT_NAME || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -197,7 +248,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
                   placeholder="Enter email"
                   className="w-full mt-1 p-2 border rounded-md text-black bg-gray-300"
                   required
-                  value={newCustomer.EMAIL_ADDRESS}
+                  value={newCustomer.EMAIL_ADDRESS || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -234,7 +285,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
                   placeholder="Enter tax number"
                   className="w-full mt-1 p-2 border rounded-md text-black bg-gray-300"
                   required
-                  value={newCustomer.TRN_VAT_NO}
+                  value={newCustomer.TRN_VAT_NO || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -248,7 +299,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
                   placeholder="Enter group name"
                   className="w-full mt-1 p-2 border rounded-md text-black bg-gray-300"
                   required
-                  value={newCustomer.GROUP_NAME}
+                  value={newCustomer.GROUP_NAME || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -266,7 +317,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
                   placeholder="Enter phone number"
                   className="w-full mt-1 p-2 border rounded-md text-black bg-gray-300"
                   required
-                  value={newCustomer.TELEPHONE_NO}
+                  value={newCustomer.TELEPHONE_NO || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -280,7 +331,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
                   placeholder="Enter city"
                   className="w-full mt-1 p-2 border rounded-md text-black bg-gray-300"
                   required
-                  value={newCustomer.CITY_NAME}
+                  value={newCustomer.CITY_NAME || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -316,7 +367,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
                   name="WEB_ADDRESS"
                   placeholder="Enter website"
                   className="w-full mt-1 p-2 border rounded-md text-black bg-gray-300"
-                  value={newCustomer.WEB_ADDRESS}
+                  value={newCustomer.WEB_ADDRESS || ""}
                   onChange={handleChange} 
                 />
               </div>
@@ -328,7 +379,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
                     name="COMMUNICATION_ADDRESS"
                     placeholder="Enter communication address"
                     className="w-full mt-1 p-2 border rounded-md text-black bg-gray-300"
-                    value={newCustomer.COMMUNICATION_ADDRESS}
+                    value={newCustomer.COMMUNICATION_ADDRESS || ""}
                     onChange={handleChange}
                   />
               </div>
@@ -345,7 +396,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
                   placeholder="Enter invoice address"
                   className="w-full mt-1 p-2 border rounded-md text-black bg-gray-300"
                   required
-                  value={newCustomer.INVOICE_ADDRESS}
+                  value={newCustomer.INVOICE_ADDRESS || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -358,7 +409,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
                   placeholder="Enter delivery address"
                   className="w-full mt-1 p-2 border rounded-md text-black bg-gray-300"
                   required
-                  value={newCustomer.DELIVERY_ADDRESS}
+                  value={newCustomer.DELIVERY_ADDRESS || ""}
                   onChange={handleChange}
                 />
               </div>
@@ -371,7 +422,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
               type="submit"
               className="w-full sm:w-1/2 px-6 py-2 bg-blue-600 text-white mx-auto rounded-md hover:bg-blue-700"
             >
-              {existingData ? "Update Customer" : "Add Customer"}
+              {Object.keys(existingData).length > 0 ? "Update Customer" : "Add Customer"}
             </button>
           </div>
         </form>
@@ -381,7 +432,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
       <div className="basis-1/4  flex flex-col justify-between p-4 rounded-lg border border-gray-700 ">
         <h3 className="text-4xl font-bold mb-4 text-white">Add Contacts</h3>
         <div className="overflow-y-auto space-y-2 h-full">
-          {newCustomer.CLIENT_CONTACTS.length === 0 ? (
+          {(newCustomer.CLIENT_CONTACTS || []).length === 0 ? (
             <p className="text-slate-100 text-center">
               No contacts found, click 'Add Contact' to add a new one.
             </p>
@@ -446,7 +497,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
             type="text"
             name="NAME"
             placeholder="Name"
-            value={newContact.NAME}
+            value={newContact.NAME || ""}
             onChange={handleContactChange}
             className="p-2 border rounded-md w-full text-gray-500"
           />
@@ -454,14 +505,14 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
             type="text"
             name="DESIGNATION"
             placeholder="Designation"
-            value={newContact.DESIGNATION}
+            value={newContact.DESIGNATION || ""}
             onChange={handleContactChange}
             className="p-2 border rounded-md w-full text-gray-500"
           />
           <select 
             name="CONTACT_FOR"
             className="p-2 border rounded-md w-full text-gray-500" 
-            value={newContact.CONTACT_FOR}
+            value={newContact.CONTACT_FOR || ""}
             onChange={handleContactChange}
             id=""
           >
@@ -475,7 +526,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
             type="email"
             name="EMAIL_ADDRESS"
             placeholder="Email"
-            value={newContact.EMAIL_ADDRESS}
+            value={newContact.EMAIL_ADDRESS || ""}
             onChange={handleContactChange}
             className="p-2 border rounded-md w-full text-gray-500"
           />
@@ -486,7 +537,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
             type="tel"
             name="MOBILE_NO"
             placeholder="Mobile Number"
-            value={newContact.MOBILE_NO}
+            value={newContact.MOBILE_NO || ""}
             onChange={handleContactChange}
             className="p-2 border rounded-md w-full mb-2 text-gray-500"
           />
@@ -495,7 +546,7 @@ const AddCustomer = ({ existingData, fetchAllCustomers }) => {
             name="ALTERNATIVE_CONTACT"
             placeholder="Alternative Number"
             className="p-2 border rounded-md w-full mb-2 text-gray-500"
-            value={newContact.ALTERNATIVE_CONTACT}
+            value={newContact.ALTERNATIVE_CONTACT || ""}
             onChange={handleContactChange}
           />
           </div>

@@ -1,7 +1,25 @@
 import { motion } from "framer-motion";
-
+import { useState, useEffect } from "react";
+import AddCustomer from "../components/Forms/AddCustomer";
+import { useLocation } from "react-router-dom";
 
 const Pages = () => {
+  const location = useLocation();
+  const { customer = {} } = location.state || {}; 
+  
+  const [customers, setCustomers] = useState([]);
+
+  // Function to fetch customers from local storage
+  const fetchAllCustomers = () => {
+    const storedCustomers = JSON.parse(localStorage.getItem("customers")) || [];
+    setCustomers(storedCustomers);
+  };
+
+  // Fetch customers when the component mounts
+  useEffect(() => {
+    fetchAllCustomers();
+  }, []);
+
 
   return (
     <motion.div
@@ -10,6 +28,8 @@ const Pages = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
     >
+      <AddCustomer existingData={customer || {}} fetchAllCustomers={fetchAllCustomers} />
+
     </motion.div>
   );
 };

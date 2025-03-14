@@ -150,33 +150,25 @@ const CreateItem = () => {
     
                 {/* Row 2: Item type & Supplier Ref */}
                 <div className="flex flex-wrap md:flex-nowrap gap-4">
-                  <div className="w-full md:w-1/2">
-                    <label
-                      className="block text-sm font-medium text-gray-300"
-                      htmlFor="type"
-                    >
-                      Type:
-                    </label>
-                    <label className="text-gray-300">
-                        <input
-                            type="radio"
-                            name="type"
-                            value="product"
-                            checked={newItem.type === "product"}
-                            onChange={handleChange}
-                        /> Product
-                    </label>
-                    <label className="text-gray-300">
-                        <input
-                            type="radio"
-                            name="type"
-                            value="service"
-                            checked={newItem.type === "service"}
-                            onChange={handleChange}
-                        /> Service
-                    </label>
-                    
-                  </div>
+                <div className="w-full md:w-1/2">
+                  <label
+                    className="block text-sm font-medium text-gray-300"
+                    htmlFor="type"
+                  >
+                    Type:
+                  </label>
+                  <select
+                    id="type"
+                    name="type"
+                    value={newItem.type}
+                    onChange={handleChange}
+                    className="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="product">Product</option>
+                    <option value="service">Service</option>
+                  </select>
+                </div>
+
     
                   <div className="w-full md:w-1/2">
                     <label

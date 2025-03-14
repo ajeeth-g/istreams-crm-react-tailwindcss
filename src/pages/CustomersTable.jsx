@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Search, Eye, Trash2, Plus, X} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogPanel, DialogTitle } from "@headlessui/react";
+import toast from "react-hot-toast";
+
 
 const CustomersTable = () => {
   const navigate = useNavigate();
@@ -10,6 +12,23 @@ const CustomersTable = () => {
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState(null);
+
+  useEffect(() => {
+    // Fetch customers from local storage
+    const storedCustomers = JSON.parse(localStorage.getItem("customers")) || [];
+    setFilteredCustomers(storedCustomers);
+  }, []);
+
+  const fetchAllCustomers = () => {
+    const storedCustomers = JSON.parse(localStorage.getItem("customers")) || [];
+    setFilteredCustomers(storedCustomers);
+  };
+  
+  // Call it inside useEffect to load customers when the component mounts
+  useEffect(() => {
+    fetchAllCustomers();
+  }, []);
+  
 
   const openDeleteModal = (customer) => {
     setCustomerToDelete(customer);
@@ -21,22 +40,51 @@ const CustomersTable = () => {
     setIsDeleteModalOpen(false);
   };
 
-  const handleDelete = async () => {
-    try {
-      await fetch(`/api/customers/${customerToDelete._id}`, {
-        method: "DELETE",
-      });
-  
-      closeDeleteModal();
-    } catch (error) {
-      console.error("Error deleting customer:", error);
-    }
-  };
-
   const handleSearch = (e) => {
-   //handleSearch
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+    
+    // Fetch customers from local storage and filter based on search term
+    const storedCustomers = JSON.parse(localStorage.getItem("customers")) || [];
+    const filtered = storedCustomers.filter(customer =>
+      customer.CLIENT_NAME.toLowerCase().includes(value) ||
+      customer.EMAIL_ADDRESS.toLowerCase().includes(value) ||
+      customer.NATURE_OF_BUSINESS.toLowerCase().includes(value) ||
+      customer.COUNTRY.toLowerCase().includes(value) ||
+      customer.CITY_NAME.toLowerCase().includes(value)
+    );
+  
+    setFilteredCustomers(filtered);
   };
 
+  const handleEdit = (customer) => {
+    // Navigate to the add customer form with state (preloaded customer data)
+    navigate("/pages", { state: { customer } });
+  };
+
+  const handleDelete = () => {
+    if (!customerToDelete) return;
+  
+    // Get customers from local storage
+    let storedCustomers = JSON.parse(localStorage.getItem("customers")) || [];
+  
+    // Remove the selected customer
+    storedCustomers = storedCustomers.filter(customer => customer.CLIENT_ID !== customerToDelete.CLIENT_ID);
+  
+    // Save updated customers back to local storage
+    localStorage.setItem("customers", JSON.stringify(storedCustomers));
+  
+    // Update state
+    setFilteredCustomers(storedCustomers);
+    
+    toast.success("Customer deleted successfully!");
+    
+    closeDeleteModal();
+  };
+
+  
+
+  
 
   return (
     <motion.div
@@ -132,7 +180,7 @@ const CustomersTable = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                   <button
                     className="text-indigo-400 hover:text-indigo-300 mr-2"
-                    onClick={() => navigate("/pages", { state: { customer } })}
+                    onClick={() => handleEdit(customer)}
                   >
                     <Eye size={18} />
                   </button>

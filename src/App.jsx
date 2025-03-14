@@ -1,21 +1,26 @@
-import { Toaster } from "react-hot-toast";
-import { Route, Routes } from "react-router-dom";
+import {  Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import Sidebar from "./components/sidebar";
-import Cart from "./pages/Cart";
-import CategoryPage from "./pages/CategoryPage";
-import Checkout from "./pages/Checkout";
-import CreateItem from "./pages/CreateItem";
-import CustomersTable from "./pages/CustomersTable";
+// import SignUpPage from "./pages/SignUpPage";
+// import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
-import EnquiryPage from "./pages/EnquiryPage";
-import ItemForm from "./pages/ItemForm";
-import ItemsList from "./pages/ItemsList";
-import OrderConfirmation from "./pages/OrderConfirmation";
 import Pages from "./pages/Pages";
+import CustomersTable from "./pages/CustomersTable";
+import Sidebar from "./components/sidebar";
+import { Toaster } from "react-hot-toast";
+
+import CategoryPage from "./pages/CategoryPage";
+
 import ProductDetails from "./pages/ProductDetails";
-import ProductsList from "./pages/ProductsList";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/Checkout";
+import OrderConfirmation from "./pages/OrderConfirmation";
 import ServicePricing from "./pages/ServicePricing";
+
+
+import EnquiryPage from "./pages/EnquiryPage";
+
+import CreateItem from "./pages/CreateItem";
+import ItemsList from "./pages/ItemsList";
 
 // import { useUserStore } from "./stores/useUserStore";
 // import { useEffect } from "react";
@@ -43,25 +48,25 @@ function App() {
         <Sidebar />
         <div className="flex-grow p-6 overflow-y-auto h-full w-full">
           <Routes>
+            {/* <Route path="/signup" element={<SignUpPage /> } />
+            <Route path="/login" element={ <LoginPage />  } /> */}
             <Route path="/" element={<Dashboard />} />
-            <Route path="/pages" element={<Pages />} />
-            <Route path="/customersTable" element={<CustomersTable />} />
-
-            <Route path="/itemForm" element={<ItemForm />} />
-            <Route path="/category" element={<CategoryPage />} />
+            <Route path="/pages" element={ <Pages />} />
+            <Route path="/customersTable" element={ <CustomersTable />} />
+            
+            <Route path="/category" element={ <CategoryPage />} />
             <Route path="/products/:category" element={<ProductDetails />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/servicePricing" element={<ServicePricing />} />
-
-            <Route path="/productsList" element={<ProductsList />} />
+            
+            
             <Route path="/enquiryPage" element={<EnquiryPage />} />
-            <Route path="/create-product" element={<ItemForm />} />
-            <Route path="/create-service" element={<ItemForm />} />
 
             <Route path="/createItem" element={<CreateItem />} />
             <Route path="/itemsList" element={<ItemsList />} />
+
           </Routes>
         </div>
       </div>
